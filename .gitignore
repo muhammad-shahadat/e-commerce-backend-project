@@ -1,32 +1,19 @@
-# 1. Dependency and Build Files
-/node_modules           # Node.js dependencies
+/node_modules
 /dist
 /build
-/coverage               # Test coverage reports
-
-# 2. Environment Variables
-.env                    # Local environment variables
+/coverage
+.env
 .env.local
 .env.*.local
-.DS_Store               # macOS system files
-Thumbs.db               # Windows system files
-
-# 3. Log and Temp Files
-*.log                   # All log files
+.DS_Store
+Thumbs.db
+*.log
 npm-debug.log*
 yarn-debug.log*
-
-# 4. Multer Uploads / Temporary Storage
-/src/uploads/*          # Ignore all files inside uploads
-/uploads/*              # Ignore all files inside uploads
-temp_uploads/*          # Ignore temporary uploads folder
-
-
-# 5. Cloudinary temp
+/src/uploads/**/*
+/uploads/**/*
+temp_uploads/**/*
 .cld-temp
-
-# 6. Database Files
 *.sqlite
 *.db
 /data/*.sqlite
-node_modules
