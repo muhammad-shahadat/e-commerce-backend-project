@@ -1,0 +1,3 @@
+{"level":"error","message":"Error parsing JSON for variant ID 45: Assignment to constant variable.","timestamp":"2025-10-09 12:07:07"}
+{"level":"error","message":"Error parsing JSON for variant ID 46: Assignment to constant variable.","timestamp":"2025-10-09 12:07:07"}
+{"level":"error","message":"Failed to delete image file from server C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\uploads\\product_images\\productImage-1760327872518-990775902.jpg: ENOENT: no such file or directory, unlink 'C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\uploads\\product_images\\productImage-1760327872518-990775902.jpg'","timestamp":"2025-10-13 10:25:09"}
