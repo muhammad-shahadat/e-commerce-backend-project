@@ -20,7 +20,6 @@ router.post("/create",
     //passport.authenticate("jwt", {session: false}), 
     //authRole("admin"),
     upload.array("productImage", 10),
-    getRelativePathForDB,
     ...productValidationRules,
     runValidator,
     handleCreateProduct,
@@ -47,7 +46,6 @@ router.patch("/:id/quantity", handleUpdateQuantity)
 //update main image with product ID -> API /api/products/:id/main-image
 router.put("/:id/main-image",
     upload.single("productImage"),
-    getRelativePathForDB,
     handleUpdateMainImage,
 );
 

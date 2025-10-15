@@ -4,6 +4,8 @@ const path = require("path");
 
 const pool = require("../../config/db");
 const { logger } = require("../../config/logger");
+const { cloudinaryImageDelete } = require("../helper/cloudinaryHelper");
+const { error } = require("console");
 
 
 
@@ -323,40 +325,77 @@ const updateQuantity = async (productVariantId, quantity) => {
     
 }
 
-const updateMainImage = async (productId, webAccessiblePath) => {
+const updateMainImage = async (productId, newSecureUrl, newPublicId) => {
+    let connection;
+    let oldPublicId;
     try {
 
-        //read existing img path from DB
-        const [existingImageResults] = await pool.execute(
-            `SELECT image_path FROM product_images
-            WHERE product_id = ? AND is_main = 1`,
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        //old public id to cleanup cloudinary
+        const [oldImgResults] = await connection.execute(
+            `SELECT public_id FROM product_images
+             WHERE product_id = ? AND is_main = 1`,
             [productId]
         );
 
-        if(existingImageResults.length > 0) {
+        if(oldImgResults.length > 0) {
+            oldPublicId = oldImgResults[0].public_id;
 
-            const relativePath = existingImageResults[0].image_path;
-
-            await deleteSingleImageByPath(relativePath);
-            
         }
 
         //update new image into DB
-        const [imageResults] = await pool.execute(
-            `UPDATE product_images SET image_path = ?
+        const [newImgResults] = await connection.execute(
+            `UPDATE product_images SET image_path = ?,
+            public_id = ?
             WHERE product_id = ? AND is_main = 1`,
-            [webAccessiblePath, productId]
+            [newSecureUrl, newPublicId, productId]
         );
 
-        if(imageResults.affectedRows === 0) {
-            await deleteSingleImageByPath(webAccessiblePath)
+        if(newImgResults.affectedRows === 0) {
+            await connection.rollback();
             throw createError(404, "product not found or can not update main image");
+        }
+
+        await connection.commit();
+
+        //cleanup cloudinary image:
+        if(oldPublicId) {
+            try {
+                await cloudinaryImageDelete(oldPublicId)
+                
+            } catch (error) {
+                logger.error(`Failed to delete old Cloudinary main image ID ${oldPublicId}: ${error.message}`); 
+            }
+
         }
 
         
     } catch (error) {
+
+        logger.error("Failed to update main image in DB transaction.", error);
+
+        if(connection) {
+            await connection.rollback();
+        }
+
+        try {
+
+            await cloudinaryImageDelete(newPublicId)
+            
+        } catch (error) {
+            logger.error(`CRITICAL: Failed to delete newly uploaded image from Cloudinary after DB failure: ${error.message}`);
+            
+        }
+
         throw error
         
+    } finally {
+        if(connection) {
+            connection.release();
+        }
+
     }
 }
 

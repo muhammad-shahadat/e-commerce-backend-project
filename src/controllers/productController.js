@@ -10,6 +10,8 @@ const { deleteUploadedFiles } = require("../helper/deleteUploadedFiles");
 const { successResponse } = require("./responseController");
 const { getProducts, getProduct, searchProducts, updateQuantity, updateMainImage } = require("../services/productService");
 const { logger } = require("../../config/logger");
+const { cloudinaryImageUpload, cloudinaryImageDelete } = require("../helper/cloudinaryHelper");
+const { error } = require("console");
 
 
 
@@ -51,7 +53,10 @@ const generateSku = (mainCategoryName, subCategoryName, productId) =>{
 
 
 const handleCreateProduct = async (req, res, next) =>{
+    
     let connection;
+    let uploadedImagePublicIds = []; // Public IDs will be saved here for Rollback
+    
     try {
         connection = await pool.getConnection();
         await connection.beginTransaction();
@@ -70,7 +75,7 @@ const handleCreateProduct = async (req, res, next) =>{
 
         if(categoryHierarchy.length === 0){
             await connection.rollback();
-            await deleteUploadedFiles(req.files);
+            //await deleteUploadedFiles(req.files);//this will be applicable only for local server storage
 
             return next(createError(404, "Category not found"));
             
@@ -85,7 +90,7 @@ const handleCreateProduct = async (req, res, next) =>{
 
         if (!title || !categoryId || req.body.basePrice === null || req.body.basePrice === undefined || req.body.basePrice === "") {
             await connection.rollback();
-            await deleteUploadedFiles(req.files);
+            //await deleteUploadedFiles(req.files);//this will be applicable only for local server storage
 
             return next(createError(422, "Fill in the required fields!"));
 
@@ -102,7 +107,7 @@ const handleCreateProduct = async (req, res, next) =>{
 
         if (isNaN(basePrice)){
             await connection.rollback();
-            await deleteUploadedFiles(req.files);
+            //await deleteUploadedFiles(req.files);//this will be applicable only for local server storage
 
             return next(createError(401, "Base Price must be a number!"));
             
@@ -185,16 +190,69 @@ const handleCreateProduct = async (req, res, next) =>{
 
         // 3. `product_images` table data insertion
         if (req.files && req.files.length > 0) {
-            const imageInserts = req.files.map((file, index) => {
+
+            //this will be applicable only for local server storage
+            /*const imageInserts = req.files.map((file, index) => {
                 const isMain = index.toString() === mainImageIndex ? 1 : 0;
                 const webAccessiblePath = file.path.replace(/\\/g, "/");
                 return [productId, webAccessiblePath, isMain];
+            });*/
+
+
+            //cloudinary logic start from here
+            const uploadPromises = req.files.map((file) => {
+                return cloudinaryImageUpload(file);
             });
+
+            // Use Promise.allSettled: Returns results for all promises, even if one fails
+            const results = await Promise.allSettled(uploadPromises);
+            
+            
+            const imageInserts = [];
+            let hasFailedUpload = false;
+
+            // Processing the results array
+            results.forEach((result, index) => {
+
+                if (result.status === 'fulfilled') {
+
+                    // A. Successful Upload
+                    const imageResult = result.value; // The successfully resolved object
+                
+                    // Save ID for Rollback
+                    uploadedImagePublicIds.push(imageResult.public_id);
+                
+                    // Prepare Data for Database Insert
+                    const isMain = index.toString() === mainImageIndex ? 1 : 0;
+                    imageInserts.push([productId, imageResult.secure_url, imageResult.public_id, isMain]);
+
+                } 
+                else if (result.status === 'rejected') {
+                    // B. Failed Upload
+                    hasFailedUpload = true;
+                    logger.error("Single image upload failed:", result.reason.message);
+                }
+
+            });
+
+
             //why use query: it inserts multiple row to the db
-            await connection.query(
-                'INSERT INTO product_images (product_id, image_path, is_main) VALUES ?',
-                [imageInserts]
-            );
+            if (imageInserts.length > 0) {
+            
+                await connection.query(
+                    'INSERT INTO product_images (product_id, image_path, public_id, is_main) VALUES ?',
+                    [imageInserts]
+
+                );
+            }
+
+            // 4. If even one upload failed, the entire transaction must fail
+            if (hasFailedUpload) {
+                // Throw Error to trigger Rollback and cleanup logic in the catch block
+                throw createError(400, "One or more images failed to upload. Transaction rolled back.");
+            }
+
+
         }
 
         
@@ -214,18 +272,28 @@ const handleCreateProduct = async (req, res, next) =>{
 
 
     } catch (error) {
-        console.error("failed to create product:", error);
+
+        logger.error("failed to create product:", error);
         if (connection) {
             await connection.rollback();
         }
         
-        await deleteUploadedFiles(req.files);
+        if (uploadedImagePublicIds.length > 0) {
+            logger.warn(`Transaction failed. Attempting to clean up ${uploadedImagePublicIds.length} images from Cloudinary.`);
+    
+            const deletePromises = uploadedImagePublicIds.map(publicId => cloudinaryImageDelete(publicId).catch(error => {
+        
+                logger.error(`Failed to cleanup Cloudinary ID ${publicId}: ${error.message}`);
+            }));
 
-        res.status(500).send({
+            await Promise.all(deletePromises);
+        }
 
-            message: "internal server error", 
-            error: error.message, 
-        });
+        //await deleteUploadedFiles(req.files);//this will be applicable for local server storage
+
+
+        next(error)
+
     } finally {
         if (connection) {
             connection.release();
@@ -301,12 +369,17 @@ const handleGetProduct = async (req, res, next) => {
 }
 
 const handleDeleteProduct = async (req, res, next) => {
+
+    let connection;//use transaction for cloudinary.
     try {
 
         const productId = req.params.id;
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-        const [imageResults] = await pool.execute(
-            `SELECT image_path FROM product_images
+
+        const [imageResults] = await connection.execute(
+            `SELECT image_path, public_id FROM product_images
             WHERE product_id = ?
             `,
             [productId]
@@ -317,7 +390,8 @@ const handleDeleteProduct = async (req, res, next) => {
         }
 
         //delete multiple images from server.
-        const deletionPromises = imageResults.map(async (row) => {
+        //this will be applicable only for local server storage
+        /*const deletionPromises = imageResults.map(async (row) => {
             const absolutePath = path.join(__dirname, "..", row.image_path);
 
             try {
@@ -331,11 +405,12 @@ const handleDeleteProduct = async (req, res, next) => {
                 
             }
 
-        })
+        })*/
 
-        await Promise.all(deletionPromises);
 
-        const [results] = await pool.execute(
+        
+
+        const [results] = await connection.execute(
             `
             DELETE FROM products WHERE id = ?
             `,
@@ -343,8 +418,22 @@ const handleDeleteProduct = async (req, res, next) => {
         )
 
         if(results.affectedRows === 0) {
+            await connection.rollback()
             return next(createError(404, `Product with ID ${productId} not found to delete`));
         }
+
+        await connection.commit();
+
+        const deletionPromises = imageResults.map((row) => {
+
+            return cloudinaryImageDelete(row.public_id).catch((error) => {
+                logger.error(`DB record delete, but Failed to cleanup Cloudinary ID ${publicId}: ${error.message}`);
+
+            })
+
+        })
+
+        await Promise.all(deletionPromises);
 
         successResponse(res, {
             statusCode: 200,
@@ -353,8 +442,18 @@ const handleDeleteProduct = async (req, res, next) => {
 
 
     } catch (error) {
+        logger.error("failed to create product:", error);
+
+        if (connection) {
+            await connection.rollback();
+        }
         next(error)
         
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+
     }
 
 }
@@ -486,6 +585,7 @@ const handleUpdateQuantity = async (req, res, next) => {
 }
 
 const handleUpdateMainImage = async (req, res, next) => {
+
     try {
 
         const productId = req.params.id;
@@ -494,11 +594,14 @@ const handleUpdateMainImage = async (req, res, next) => {
             return next(createError(400, "select one main image"));
         }
 
-        const imagePath = req.file.path; //this path contain back slash (\)
+        //no need for cloudinary
+        /*const imagePath = req.file.path; //this path contain back slash (\)
 
-        const webAccessiblePath = imagePath.replace(/\\/g, "/"); //replace back slash with froward slash
+        const webAccessiblePath = imagePath.replace(/\\/g, "/"); //replace back slash with froward slash*/
+        
+        const {secure_url, public_id} = await cloudinaryImageUpload(req.file);
 
-        await updateMainImage(productId, webAccessiblePath);
+        await updateMainImage(productId, secure_url, public_id);
 
         successResponse(res, {
             statusCode: 200,

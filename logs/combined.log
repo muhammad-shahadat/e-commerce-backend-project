@@ -551,3 +551,35 @@
 {"level":"info","message":"Successfully deleted image file from server: C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\uploads\\product_images\\productImage-1760329509659-340605776.jpg","timestamp":"2025-10-13 10:28:06"}
 {"level":"info","message":"Successfully deleted image file from server: C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\uploads\\product_images\\productImage-1760329754541-759258630.jpg","timestamp":"2025-10-13 10:29:14"}
 {"level":"info","message":"Successfully deleted image file from server: C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\uploads\\product_images\\productImage-1760329767217-514858108.jpg","timestamp":"2025-10-13 10:29:27"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-14 21:28:01"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-14 21:28:01"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-14 22:35:13"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-14 22:35:13"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 07:50:14"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 07:50:14"}
+{"level":"info","message":"Successfully deleted image from cloudinary ID: ecommerce-products/lgvg2x4pfsbloxfwg45d","timestamp":"2025-10-15 07:51:18"}
+{"level":"info","message":"Successfully deleted image from cloudinary ID: ecommerce-products/doytt3kaabpne3el0jmh","timestamp":"2025-10-15 07:51:19"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 08:55:52"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 08:55:52"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 08:59:58"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 08:59:58"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 09:33:51"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 09:33:51"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 09:34:00"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 09:34:00"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 09:44:17"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 09:44:17"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 09:47:02"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 09:47:02"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 10:26:43"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 10:26:43"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 10:26:46"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 10:26:46"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-10-15 10:31:44"}
+{"level":"info","message":"server is running at http://localhost:5000","timestamp":"2025-10-15 10:31:44"}
+{"level":"error","message":"Failed to update main image in DB transaction. product not found or can not update main image","stack":"NotFoundError: product not found or can not update main image\n    at updateMainImage (C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\services\\productService.js:358:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async handleUpdateMainImage (C:\\Users\\Shahadat Hossain\\Desktop\\E-commerce\\backend\\src\\controllers\\productController.js:604:9)","timestamp":"2025-10-15 10:34:37"}
+{"level":"info","message":"Successfully deleted image from cloudinary ID: ecommerce-products/oih4onwj3lp8cc4lekby","timestamp":"2025-10-15 10:34:38"}
+{"level":"info","message":"Successfully deleted image from cloudinary ID: ecommerce-products/iqwmgcnq90oomxfob3hr","timestamp":"2025-10-15 10:39:07"}
+{"level":"warn","message":"No images found for product ID 25","timestamp":"2025-10-15 10:40:23"}
+{"level":"info","message":"Successfully deleted image from cloudinary ID: ecommerce-products/ysdbih4xm07gat1mh6aq","timestamp":"2025-10-15 10:40:55"}
+{"level":"info","message":"Successfully deleted image from cloudinary ID: ecommerce-products/bv2pyaytmri0aafmkwiw","timestamp":"2025-10-15 10:40:55"}

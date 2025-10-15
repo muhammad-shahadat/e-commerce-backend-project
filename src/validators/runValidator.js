@@ -9,9 +9,12 @@ const runValidator = async (req, res, next) => {
     try {
         
         const errors = validationResult(req);
-        if(!errors.isEmpty()){
 
-            if(req.files && req.files.length > 0) {
+        if(!errors.isEmpty()){
+            
+            // **THIS BLOCK IS NO LONGER NECESSARY!** it will be nedd only for local server storage
+            
+            /*if(req.files && req.files.length > 0) {
                 logger.warn("Validation Failed! Cleaning up uploaded files...");
 
                 try {
@@ -24,6 +27,7 @@ const runValidator = async (req, res, next) => {
                 }
 
             }
+            */
             
             return next(createError(422, errors.array()[0].msg));
 

@@ -6,7 +6,13 @@ const fs = require("fs");
 const { UPLOAD_DIR, MAX_FILE_SIZE, ALLOWED_FILE_TYPES } = require("../../config/fileFilterConfig");
 
 
-const storage = multer.diskStorage({
+// Multer Storage Configuration (For Cloudinary)
+// [CHANGE: instead diskStorage use memoryStorage]
+
+const storage = multer.memoryStorage();
+
+// this config only applicable for local server storage
+/*const storage = multer.diskStorage({
     destination: (req, file, cb) =>{
 
         const uploadDir = path.join(process.cwd(), "src", UPLOAD_DIR);
@@ -20,7 +26,7 @@ const storage = multer.diskStorage({
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
-});
+});*/
 
 const fileFilter = (req, file, cb) =>{
     const fileExtname = path.extname(file.originalname).toLowerCase().substring(1);
@@ -42,8 +48,10 @@ const upload = multer({
 
 });
 
+
+//this config also applicable for local server storage
 //middleware, to store relative path in db.
-const getRelativePathForDB = (req, res, next) => {
+/*const getRelativePathForDB = (req, res, next) => {
 
     // 1. Single file check (when upload.single())
     if (req.file) {
@@ -73,9 +81,9 @@ const getRelativePathForDB = (req, res, next) => {
     }
 
     next();
-};
+};*/
 
 module.exports = {
     upload,
-    getRelativePathForDB,
+    //getRelativePathForDB,
 };
